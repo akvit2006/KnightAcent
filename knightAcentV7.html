@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knight's Ascent: A Princess Rescue Game</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.18.0/matter.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.7.77/Tone.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&family=Poppins:wght@400;600&display=swap');
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(to bottom, #87ceeb 0%, #f0f4f8 100%);
+            color: #333;
+            overflow: hidden;
+        }
+
+        h1 {
+            font-family: 'MedievalSharp', cursive;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        
+        .main-content {
+            display: flex;
+            flex-direction: row;
+            gap: 20px;
+            width: 100%;
+        }
+
+        .game-area-wrapper {
+            position: relative;
+            flex-grow: 1;
+            display: flex;
+            align-items: stretch;
+        }
+
+        .progress-track {
+            width: 40px;
+            background-color: rgba(0,0,0,0.05);
+            border-radius: 12px 0 0 12px;
+            position: relative;
+        }
+
+        #rope-line {
+            position: absolute;
+            bottom: 25px; /* Aligns with top of the ground */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 6px;
+            background-color: #8B4513;
+            border-radius: 3px;
+        }
+
+        #knight-progress-icon {
+            position: absolute;
+            bottom: 25px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 52px;
+            height: 52px;
+            transition: bottom 0.2s linear;
+        }
+        #knight-progress-icon.victory svg {
+            animation: knight-cheer 1s ease-in-out;
+        }
+
+        .game-canvas-container {
+            position: relative;
+            flex-grow: 1;
+            border-radius: 0 12px 12px 0;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            background-color: #dcdcdc; /* Light grey for castle wall */
+            background-image: 
+                linear-gradient(rgba(255,255,255,.1) 2px, transparent 2px),
+                linear-gradient(90deg, rgba(255,255,255,.1) 2px, transparent 2px),
+                linear-gradient(rgba(255,255,255,.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.05) 1px, transparent 1px);
+            background-size:100px 50px, 100px 50px, 20px 20px, 20px 20px;
+            background-position:-2px -2px, -2px -2px, -1px -1px, -1px -1px;
+            aspect-ratio: 4 / 5;
+        }
+        
+        #princess-container {
+            position: absolute;
+            width: 80px;
+            height: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #4a3c31;
+            border: 5px solid #3d322a;
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+        }
+        #princess-container svg {
+            width: 80%;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+        }
+        
+        .controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+            background-color: #fdf6e3;
+            border: 3px solid #d3c0a5;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            width: 200px;
+        }
+
+        .controls-panel h3 {
+            font-family: 'MedievalSharp', cursive;
+            margin: 0 0 10px 0;
+            text-align: center;
+            color: #34495e;
+            font-size: 1.5em;
+            border-bottom: 2px solid #d3c0a5;
+            padding-bottom: 10px;
+        }
+        
+        .difficulty-selector, .shape-buttons, .game-actions {
+            display: grid;
+            gap: 10px;
+        }
+
+        .difficulty-selector { grid-template-columns: 1fr; }
+        .shape-buttons { grid-template-columns: 1fr 1fr; }
+
+        .difficulty-btn {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #d3c0a5;
+            background-color: #fff;
+            color: #34495e;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .difficulty-btn.selected {
+            background-color: #8e44ad;
+            color: white;
+            border-color: #8e44ad;
+        }
+        .difficulty-btn:not(.selected):hover { border-color: #bdc3c7; }
+
+        .shape-btn {
+            width: 100%;
+            aspect-ratio: 1 / 1;
+            background-color: #7f8c8d;
+            border: 2px solid #6c7a7b;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .shape-btn svg {
+            width: 60%;
+            height: 60%;
+            fill: white;
+            filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.2));
+        }
+
+        .shape-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .shape-btn:disabled {
+            background-color: #bdc3c7;
+            border-color: #a0a6a8;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .shape-btn#rect-btn { background-color: #95a5a6; }
+        .shape-btn#circle-btn { background-color: #bdc3c7; }
+        .shape-btn#triangle-btn { background-color: #7f8c8d; }
+
+        .game-actions {
+            margin-top: auto;
+            grid-template-columns: 1fr;
+        }
+
+        .action-btn {
+            padding: 12px 20px;
+            font-size: 1em;
+            font-weight: 600;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Poppins', sans-serif;
+            text-decoration: none;
+            text-align: center;
+        }
+        
+        #reset-btn {
+            background: linear-gradient(45deg, #e74c3c, #c0392b);
+            box-shadow: 0 4px 10px rgba(231, 76, 60, 0.4);
+        }
+        #reset-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(231, 76, 60, 0.5);
+        }
+        
+        #instructions-btn {
+            background: linear-gradient(45deg, #2980b9, #3498db);
+            box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
+        }
+        #instructions-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(52, 152, 219, 0.5);
+        }
+        
+        .status-box {
+            width: 100%;
+            padding: 15px;
+            background-color: #ecf0f1;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            color: #2c3e50;
+            box-sizing: border-box;
+            min-height: 50px;
+        }
+        
+        #timer-box, #height-display, #target-height-display {
+            font-size: 1.2em;
+            color: #34495e;
+            background-color: #e0e6e8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.6);
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .modal-content {
+            background-color: #fdf6e3;
+            border: 3px solid #d3c0a5;
+            padding: 30px 40px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            animation: fadeInScale 0.4s ease-out;
+            max-width: 500px;
+            width: 100%;
+        }
+        
+        .modal-content h2 {
+            font-family: 'MedievalSharp', cursive;
+            margin-top: 0;
+        }
+        .modal-content p {
+            line-height: 1.6;
+            color: #555;
+        }
+        .modal-content ul {
+            text-align: left;
+            list-style-position: inside;
+        }
+
+        #win-modal .modal-content h2 { color: #27ae60; }
+        #hint-modal .modal-content h2 { color: #3498db; }
+        #time-up-modal .modal-content h2 { color: #e74c3c; }
+        
+        #score-display {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin: 10px 0;
+        }
+        #critique-text {
+            font-style: italic;
+            color: #7f8c8d;
+            margin-top: 15px;
+        }
+
+        .modal-close-btn {
+            margin-top: 20px;
+            padding: 10px 25px;
+            border-radius: 8px;
+            border: none;
+            background-color: #34495e;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        .modal-close-btn:hover {
+            background-color: #2c3e50;
+        }
+
+        @keyframes knight-cheer {
+            0%, 100% { transform: translateY(0) translateX(-50%); }
+            50% { transform: translateY(-15px) translateX(-50%); }
+        }
+
+        @keyframes fadeInScale {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        @media (max-width: 600px) {
+            .main-content { flex-direction: column-reverse; }
+            .controls-panel { width: 100%; box-sizing: border-box; }
+            .difficulty-selector { grid-template-columns: 1fr 1fr 1fr; }
+            .shape-buttons { grid-template-columns: repeat(4, 1fr); }
+            .game-actions { grid-template-columns: 1fr 1fr; }
+            .progress-container { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="game-container">
+        <h1>Knight's Ascent</h1>
+        <div class="main-content">
+            <div class="game-area-wrapper">
+                <div class="progress-track">
+                    <div id="rope-line"></div>
+                    <div id="knight-progress-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="#34495e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="6" r="3"></circle>
+                            <line x1="12" y1="9" x2="12" y2="16"></line>
+                            <line x1="9" y1="12" x2="15" y2="12"></line>
+                            <line x1="12" y1="16" x2="9" y2="21"></line>
+                            <line x1="12" y1="16" x2="15" y2="21"></line>
+                        </svg>
+                    </div>
+                </div>
+                <div class="game-canvas-container" id="canvas-container">
+                    <div id="princess-container">
+                         <svg viewBox="0 0 100 125"><path d="M50 0C22.4 0 0 22.4 0 50s22.4 50 50 50h0c27.6 0 50-22.4 50-50S77.6 0 50 0zm0 8c23.2 0 42 18.8 42 42s-18.8 42-42 42S8 73.2 8 50 26.8 8 50 8z" fill="#f2d5a9"/><path d="M50 10c-19.3 0-35 15.7-35 35v1c0 19.3 15.7 35 35 35s35-15.7 35-35v-1c0-19.3-15.7-35-35-35z" fill="#f2d5a9"/><path d="M32.5 35c-1.9 0-3.5 1.6-3.5 3.5s1.6 3.5 3.5 3.5 3.5-1.6 3.5-3.5-1.6-3.5-3.5-3.5zm35 0c-1.9 0-3.5 1.6-3.5 3.5s1.6 3.5 3.5 3.5 3.5-1.6 3.5-3.5-1.6-3.5-3.5-3.5z" fill="#4c3c33"/><path d="M42.5 52.5c0 4.1 3.4 7.5 7.5 7.5s7.5-3.4 7.5-7.5h-15z" fill="#4c3c33"/><path d="M50 100c-22.1 0-40 4.5-40 10v15h80v-15c0-5.5-17.9-10-40-10z" fill="#d97a9a"/><path d="M90 110H10c-5.5 0-10 4.5-10 10v5h100v-5c0-5.5-4.5-10-10-10z" fill="#c46d8a"/></svg>
+                    </div>
+                </div>
+            </div>
+            <div class="controls-panel">
+                <h3>Difficulty</h3>
+                <div class="difficulty-selector">
+                    <button id="easy-btn" class="difficulty-btn">Easy</button>
+                    <button id="moderate-btn" class="difficulty-btn">Moderate</button>
+                    <button id="hard-btn" class="difficulty-btn">Hard</button>
+                </div>
+                <h3>Stones</h3>
+                <div class="shape-buttons">
+                    <button id="square-btn" class="shape-btn" title="Square Stone"><svg viewBox="0 0 100 100"><rect x="10" y="10" width="80" height="80"/></svg></button>
+                    <button id="rect-btn" class="shape-btn" title="Rectangle Stone"><svg viewBox="0 0 100 100"><rect x="10" y="25" width="80" height="50"/></svg></button>
+                    <button id="circle-btn" class="shape-btn" title="Round Stone"><svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="40"/></svg></button>
+                    <button id="triangle-btn" class="shape-btn" title="Wedge Stone"><svg viewBox="0 0 100 100"><polygon points="50,10 90,90 10,90"/></svg></button>
+                </div>
+                <div id="height-display" class="status-box">Height: 0m</div>
+                <div id="target-height-display" class="status-box">Target: --m</div>
+                <div id="timer-box" class="status-box">Time: --</div>
+                <div class="game-actions">
+                     <button id="instructions-btn" class="action-btn">📜 Instructions</button>
+                     <button id="reset-btn" class="action-btn">Reset</button>
+                </div>
+                <div id="status-box" class="status-box">Select a difficulty!</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="win-modal" class="modal">
+        <div class="modal-content">
+            <h2 id="win-title">Princess Rescued!</h2>
+            <p id="win-message">A Royal Decree on your performance...</p>
+            <div id="score-display"></div>
+            <p id="critique-text"></p>
+            <button class="modal-close-btn" data-modal-id="win-modal">Play Again</button>
+        </div>
+    </div>
+
+    <div id="hint-modal" class="modal">
+        <div class="modal-content">
+            <h2>📜 A Word from the Royal Engineer...</h2>
+            <p id="hint-text">Here's a tip to help you build better!</p>
+            <button class="modal-close-btn" data-modal-id="hint-modal">Understood!</button>
+        </div>
+    </div>
+
+    <div id="time-up-modal" class="modal">
+        <div class="modal-content">
+            <h2>Alas, Time's Up!</h2>
+            <p>The princess awaits! Try to build faster next time!</p>
+            <button class="modal-close-btn" data-modal-id="time-up-modal">Try Again</button>
+        </div>
+    </div>
+    
+    <div id="instructions-modal" class="modal">
+        <div class="modal-content">
+            <h2>How to Play</h2>
+            <ul>
+                <li><strong>Select Difficulty:</strong> Choose a difficulty to begin your quest.</li>
+                <li><strong>Pick a Stone:</strong> Click on a stone from the panel on the right.</li>
+                <li><strong>Place the Stone:</strong> Move your mouse over the game area and click again to drop the stone.</li>
+                <li><strong>Build Your Tower:</strong> Stack the stones to reach the princess's window.</li>
+                <li><strong>Be Stable:</strong> The tower must stand on its own for 5 seconds to win!</li>
+            </ul>
+            <button class="modal-close-btn" data-modal-id="instructions-modal">Let's Go!</button>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('load', function() {
+            // --- Matter.js Aliases ---
+            const { Engine, Render, Runner, World, Bodies, Body, Events, Mouse, MouseConstraint, Query } = Matter;
+
+            // --- Game Elements ---
+            const container = document.getElementById('canvas-container');
+            const statusBox = document.getElementById('status-box');
+            const timerBox = document.getElementById('timer-box');
+            const heightDisplay = document.getElementById('height-display');
+            const targetHeightDisplay = document.getElementById('target-height-display');
+            const knightProgressIcon = document.getElementById('knight-progress-icon');
+            const ropeLine = document.getElementById('rope-line');
+            const instructionsBtn = document.getElementById('instructions-btn');
+            const winModal = document.getElementById('win-modal');
+            const hintModal = document.getElementById('hint-modal');
+            const timeUpModal = document.getElementById('time-up-modal');
+            const instructionsModal = document.getElementById('instructions-modal');
+            const hintTextElement = document.getElementById('hint-text');
+            const scoreDisplay = document.getElementById('score-display');
+            const critiqueText = document.getElementById('critique-text');
+            const winMessage = document.getElementById('win-message');
+            const princessContainer = document.getElementById('princess-container');
+
+            // --- Audio Context ---
+            let audioStarted = false;
+            let synth;
+
+            function startAudio() {
+                if (audioStarted) return;
+                Tone.start();
+                audioStarted = true;
+                synth = new Tone.Synth().toDestination();
+            }
+            
+            function playSound(type) {
+                if (!audioStarted) return;
+                
+                switch (type) {
+                    case 'place':
+                        synth.triggerAttackRelease("C2", "8n");
+                        break;
+                    case 'collide':
+                        new Tone.MembraneSynth({
+                            pitchDecay: 0.01,
+                            octaves: 2,
+                            envelope: {
+                                attack: 0.001,
+                                decay: 0.2,
+                                sustain: 0.01,
+                                release: 0.1,
+                            },
+                        }).toDestination().triggerAttackRelease("C1", "8n");
+                        break;
+                    case 'win':
+                        new Tone.Synth().toDestination().triggerAttackRelease("C4", "8n", Tone.now());
+                        new Tone.Synth().toDestination().triggerAttackRelease("E4", "8n", Tone.now() + 0.2);
+                        new Tone.Synth().toDestination().triggerAttackRelease("G4", "4n", Tone.now() + 0.4);
+                        break;
+                    case 'lose':
+                        new Tone.FMSynth().toDestination().triggerAttackRelease("C2", "2n");
+                        break;
+                     case 'click':
+                        new Tone.MembraneSynth().toDestination().triggerAttackRelease("C2", "8n");
+                        break;
+                }
+            }
+
+
+            // --- Game Configuration ---
+            const difficultySettings = {
+                easy: { time: 180, friction: 0.9, restitution: 0.01, name: 'Easy', goalPercent: 0.50 },
+                moderate: { time: 60, friction: 0.8, restitution: 0.05, name: 'Moderate', goalPercent: 0.70 },
+                hard: { time: 45, friction: 0.5, restitution: 0.2, name: 'Hard', goalPercent: 0.80 }
+            };
+            let canvasWidth = container.clientWidth;
+            let canvasHeight = container.clientHeight;
+            const winDuration = 5000;
+
+            // --- Game State ---
+            let engine, render, runner, mouseConstraint, ground;
+            let currentShape = null, winTimer = null, gameTimer = null;
+            let isGameWon = false, isGameOver = false, isTimerRunning = false;
+            let timeLeft;
+            let blocks = [];
+            let currentDifficulty = null;
+            
+            // --- Shape Factories ---
+            const createShape = (x, y, type) => {
+                const settings = difficultySettings[currentDifficulty];
+                const options = { 
+                    friction: settings.friction, 
+                    restitution: settings.restitution, 
+                    density: 0.005,
+                    render: {
+                        fillStyle: '#a8a095',
+                        strokeStyle: '#6b6359',
+                        lineWidth: 2
+                    }
+                };
+                let shapeBody;
+                switch (type) {
+                    case 'square': shapeBody = Bodies.rectangle(x, y, 50, 50, options); break;
+                    case 'rect': shapeBody = Bodies.rectangle(x, y, 80, 40, options); break;
+                    case 'circle': shapeBody = Bodies.circle(x, y, 25, options); break;
+                    case 'triangle': shapeBody = Bodies.polygon(x, y, 3, 35, options); break;
+                    default: shapeBody = Bodies.rectangle(x, y, 50, 50, options);
+                }
+                shapeBody.shapeType = type;
+                return shapeBody;
+            };
+
+            // --- Game Initialization ---
+            function init() {
+                if (!currentDifficulty) {
+                    document.querySelectorAll('.shape-btn').forEach(b => b.disabled = true);
+                    return;
+                }
+
+                isGameWon = false;
+                isGameOver = false;
+                isTimerRunning = false;
+                if (winTimer) clearTimeout(winTimer);
+                if (gameTimer) clearInterval(gameTimer);
+                winModal.style.display = 'none';
+                timeUpModal.style.display = 'none';
+                blocks = [];
+                statusBox.textContent = 'Build a tower to the princess!';
+                statusBox.style.color = '#2c3e50';
+                
+                const hintBtn = document.getElementById('hint-btn');
+                if(hintBtn) hintBtn.disabled = true;
+
+                document.querySelectorAll('.shape-btn').forEach(b => b.disabled = false);
+
+                const settings = difficultySettings[currentDifficulty];
+                timeLeft = settings.time;
+                timerBox.textContent = `Time: ${timeLeft}s`;
+                timerBox.style.color = '#34495e';
+                
+                const goalHeight = canvasHeight * (1 - settings.goalPercent);
+                princessContainer.style.top = `${goalHeight - 100}px`; 
+                
+                const targetHeightMeters = Math.round((canvasHeight - goalHeight - 25) / 10);
+                targetHeightDisplay.textContent = `Target: ${targetHeightMeters}m`;
+                
+                ropeLine.style.height = `${canvasHeight - goalHeight - 25}px`;
+
+
+                engine = Engine.create();
+                engine.world.gravity.y = 1;
+
+                render = Render.create({
+                    element: container,
+                    engine: engine,
+                    options: { width: canvasWidth, height: canvasHeight, wireframes: false, background: 'transparent' }
+                });
+
+                ground = Bodies.rectangle(canvasWidth / 2, canvasHeight - 25, canvasWidth, 50, { isStatic: true, render: { fillStyle: '#6b8e23' } });
+                const wallThickness = 50;
+                const leftWall = Bodies.rectangle(0 - wallThickness / 2, canvasHeight / 2, wallThickness, canvasHeight, { isStatic: true, render: { visible: false } });
+                const rightWall = Bodies.rectangle(canvasWidth + wallThickness / 2, canvasHeight / 2, wallThickness, canvasHeight, { isStatic: true, render: { visible: false } });
+
+                const mouse = Mouse.create(render.canvas);
+                mouseConstraint = MouseConstraint.create(engine, {
+                    mouse: mouse,
+                    constraint: { stiffness: 0.9, render: { visible: false } }
+                });
+                
+                Events.on(mouseConstraint, 'startdrag', (event) => {
+                    if (blocks.includes(event.body) || isGameOver) {
+                        mouseConstraint.body = null;
+                    }
+                });
+                
+                World.add(engine.world, [ground, leftWall, rightWall, mouseConstraint]);
+                runner = Runner.create();
+                Runner.run(runner, engine);
+                Render.run(render);
+                
+                Events.on(engine, 'collisionStart', handleCollision);
+                Events.on(engine, 'afterUpdate', () => checkWinCondition(goalHeight));
+            }
+
+            // --- Game Logic ---
+            function startGameTimer() {
+                if (isTimerRunning) return;
+                isTimerRunning = true;
+                gameTimer = setInterval(() => {
+                    timeLeft--;
+                    timerBox.textContent = `Time: ${timeLeft}s`;
+                    if (timeLeft <= 10) {
+                        timerBox.style.color = '#e74c3c';
+                    }
+                    if (timeLeft <= 0) {
+                        gameOver("Alas, Time's Up!");
+                    }
+                }, 1000);
+            }
+
+            function handleCollision(event) {
+                if (isGameOver) return;
+                event.pairs.forEach(pair => {
+                    const { bodyA, bodyB } = pair;
+                    const isBodyABlock = blocks.some(block => block.id === bodyA.id);
+                    const isBodyBBlock = blocks.some(block => block.id === bodyB.id);
+
+                    if (isBodyABlock && isBodyBBlock) {
+                        if (pair.collision.depth > 1) { 
+                            playSound('collide');
+                        }
+                    }
+                });
+            }
+
+            function checkWinCondition(goalHeight) {
+                if (isGameWon || isGameOver) return;
+                
+                if (blocks.length > 0) {
+                    const highestBlock = blocks.reduce((prev, current) => {
+                        return (prev.bounds.min.y < current.bounds.min.y) ? prev : current;
+                    });
+                    const highestPoint = highestBlock.bounds.min.y;
+                    
+                    const groundY = ground.position.y;
+                    const towerHeightPixels = groundY - highestPoint;
+                    const goalDistancePixels = groundY - goalHeight;
+
+                    heightDisplay.textContent = `Height: ${Math.round(towerHeightPixels / 10)}m`;
+                    let progressPercent = (towerHeightPixels / goalDistancePixels) * 100;
+                    progressPercent = Math.min(Math.max(progressPercent, 0), 100);
+                    
+                    const ropeHeight = ropeLine.offsetHeight;
+                    const knightBottomOffset = 25;
+                    knightProgressIcon.style.bottom = `${knightBottomOffset + (progressPercent / 100) * ropeHeight}px`;
+                    
+                    if (currentShape) {
+                        if (winTimer) {
+                            clearInterval(winTimer);
+                            winTimer = null;
+                            statusBox.textContent = 'Continue building, brave knight!';
+                            statusBox.style.color = '#2c3e50';
+                        }
+                        return;
+                    }
+
+                    let isSupported = false;
+                    if (highestBlock) {
+                        const otherBlocks = blocks.filter(b => b.id !== highestBlock.id);
+                        const supportCandidates = [ground, ...otherBlocks];
+                        const collisions = Query.collides(highestBlock, supportCandidates);
+                        if (collisions.length > 0) {
+                            isSupported = true;
+                        }
+                    }
+
+                    if (highestPoint < goalHeight && isSupported) {
+                        if (!winTimer) {
+                            let countdown = winDuration / 1000;
+                            statusBox.textContent = `Hold steady for ${countdown}...`;
+                            statusBox.style.color = '#27ae60';
+                            winTimer = setInterval(() => {
+                                countdown--;
+                                if (countdown > 0) {
+                                    statusBox.textContent = `Hold steady for ${countdown}...`;
+                                } else {
+                                    winGame();
+                                }
+                            }, 1000);
+                        }
+                    } else if (winTimer) {
+                        clearInterval(winTimer);
+                        winTimer = null;
+                        statusBox.textContent = 'Continue building, brave knight!';
+                        statusBox.style.color = '#2c3e50';
+                    }
+                } else {
+                    heightDisplay.textContent = 'Height: 0m';
+                    knightProgressIcon.style.bottom = '25px';
+                }
+            }
+            
+            function winGame() {
+                if (isGameOver) return;
+                isGameWon = true;
+                isGameOver = true;
+                playSound('win');
+                clearInterval(winTimer);
+                clearInterval(gameTimer);
+                winTimer = null;
+                statusBox.textContent = 'Huzzah! You saved the princess!';
+                
+                knightProgressIcon.classList.add('victory');
+
+                winMessage.textContent = "A Royal Decree on your performance...";
+                scoreDisplay.textContent = '🤔';
+                critiqueText.textContent = '';
+                winModal.style.display = 'flex';
+
+                blocks.forEach(block => Body.setStatic(block, true));
+                getAIScore();
+            }
+
+            function gameOver(message) {
+                if (isGameOver) return;
+                isGameOver = true;
+                playSound('lose');
+                clearInterval(gameTimer);
+                clearInterval(winTimer);
+                winTimer = null;
+                statusBox.textContent = message;
+                timeUpModal.style.display = 'flex';
+                document.querySelectorAll('.shape-btn, #hint-btn').forEach(b => b.disabled = true);
+            }
+
+            // --- Gemini API Integrations ---
+            async function getAIScore() {
+                // ...
+            }
+            
+            async function getBuildingHint() {
+                // ...
+            }
+
+            // --- Event Listeners & Game Flow ---
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    playSound('click');
+                    currentDifficulty = e.target.id.replace('-btn', '');
+                    document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    resetGame();
+                });
+            });
+            
+            function handleShapeSelection(type) {
+                if (isGameOver || currentShape) return;
+                const mousePosition = mouseConstraint.mouse.position;
+                currentShape = createShape(mousePosition.x, mousePosition.y, type);
+                currentShape.collisionFilter.group = -1;
+                World.add(engine.world, currentShape);
+                mouseConstraint.body = currentShape;
+            }
+            
+            document.querySelectorAll('.shape-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    playSound('click');
+                    handleShapeSelection(btn.id.replace('-btn', ''));
+                });
+            });
+
+            document.getElementById('reset-btn').addEventListener('click', resetGame);
+            
+            instructionsBtn.addEventListener('click', () => {
+                playSound('click');
+                instructionsModal.style.display = 'flex';
+            });
+            
+            container.addEventListener('click', () => {
+                if (currentShape) {
+                    playSound('place');
+                    if (!isTimerRunning) {
+                        startGameTimer();
+                    }
+                    currentShape.collisionFilter.group = 0;
+                    blocks.push(currentShape);
+                    if (blocks.length >= 3 && !isGameOver) {
+                        const hintBtn = document.getElementById('hint-btn');
+                        if(hintBtn) hintBtn.disabled = false;
+                    }
+                    currentShape = null;
+                    mouseConstraint.body = null;
+                }
+            });
+
+            document.querySelectorAll('.modal-close-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    playSound('click');
+                    const modalId = btn.getAttribute('data-modal-id');
+                    document.getElementById(modalId).style.display = 'none';
+                    if (modalId === 'win-modal' || modalId === 'time-up-modal') {
+                        resetGame();
+                    }
+                });
+            });
+            
+            // --- Reset & Resize ---
+            function resetGame() {
+                if (runner) Runner.stop(runner);
+                if (render) Render.stop(render);
+                if (render && render.canvas) render.canvas.remove();
+                if (engine) World.clear(engine.world);
+                if (engine) Engine.clear(engine);
+
+                knightProgressIcon.classList.remove('victory');
+                canvasWidth = container.clientWidth;
+                canvasHeight = container.clientHeight;
+                
+                init();
+            }
+
+            window.addEventListener('resize', () => {
+                clearTimeout(window.resizedFinished);
+                window.resizedFinished = setTimeout(resetGame, 250);
+            });
+
+            // --- Initial Load ---
+            document.body.addEventListener('click', startAudio, { once: true });
+            init();
+        });
+    </script>
+</body>
+</html>
