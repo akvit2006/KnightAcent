@@ -740,7 +740,7 @@
                 
                 knightProgressIcon.classList.add('victory');
 
-                winMessage.textContent = "A Royal Decree on your performance...";
+                winMessage.textContent = "Hear ye, hear ye! A Royal Decree on this noble performance...";
                 scoreDisplay.textContent = '🤔';
                 critiqueText.textContent = '';
                 winModal.style.display = 'flex';
@@ -766,10 +766,6 @@
                 // ...
             }
             
-            async function getBuildingHint() {
-                // ...
-            }
-
             // --- Event Listeners & Game Flow ---
             document.querySelectorAll('.difficulty-btn').forEach(btn => {
                 btn.addEventListener('click', (e) => {
