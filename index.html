@@ -59,7 +59,6 @@
             background-color: rgba(0,0,0,0.05);
             border-radius: 12px 0 0 12px;
             position: relative;
-            flex-shrink: 0;
         }
 
         #rope-line {
@@ -138,7 +137,6 @@
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(0,0,0,0.08);
             width: 200px;
-            flex-shrink: 0;
         }
 
         .controls-panel h3 {
@@ -169,7 +167,6 @@
             border-radius: 8px;
             cursor: pointer;
             transition: all 0.3s ease;
-            font-size: 14px;
         }
         .difficulty-btn.selected {
             background-color: #8e44ad;
@@ -189,7 +186,6 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            min-height: 60px;
         }
         
         .shape-btn svg {
@@ -261,7 +257,6 @@
             color: #2c3e50;
             box-sizing: border-box;
             min-height: 50px;
-            font-size: 14px;
         }
         
         #timer-box, #height-display, #target-height-display {
@@ -351,230 +346,13 @@
             to { transform: scale(1); opacity: 1; }
         }
 
-        /* Mobile and Tablet Responsive Styles */
-        @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            
-            h1 {
-                font-size: 2em;
-                margin-bottom: 15px;
-            }
-            
-            .game-container {
-                padding: 10px;
-                gap: 15px;
-            }
-            
-            .main-content { 
-                flex-direction: column;
-                gap: 15px;
-            }
-            
-            .game-area-wrapper {
-                order: 2;
-            }
-            
-            .controls-panel { 
-                order: 1;
-                width: 100%; 
-                box-sizing: border-box;
-                padding: 15px;
-            }
-            
-            .controls-panel h3 {
-                font-size: 1.3em;
-            }
-            
-            .difficulty-selector { 
-                grid-template-columns: 1fr 1fr 1fr;
-                gap: 8px;
-            }
-            
-            .difficulty-btn {
-                padding: 12px 8px;
-                font-size: 13px;
-            }
-            
-            .shape-buttons { 
-                grid-template-columns: repeat(4, 1fr);
-                gap: 8px;
-            }
-            
-            .shape-btn {
-                min-height: 55px;
-            }
-            
-            .game-actions { 
-                grid-template-columns: 1fr 1fr;
-                gap: 10px;
-            }
-            
-            .action-btn {
-                padding: 12px 16px;
-                font-size: 14px;
-            }
-            
-            .status-box {
-                padding: 12px;
-                font-size: 13px;
-            }
-            
-            #timer-box, #height-display, #target-height-display {
-                font-size: 1.1em;
-            }
-            
-            /* Keep progress track visible on mobile but make it smaller */
-            .progress-track {
-                width: 30px;
-            }
-            
-            #knight-progress-icon {
-                width: 40px;
-                height: 40px;
-            }
-            
-            .game-canvas-container {
-                aspect-ratio: 3 / 4;
-            }
-            
-            .modal-content {
-                padding: 20px 25px;
-                margin: 10px;
-            }
-            
-            .modal-content h2 {
-                font-size: 1.5em;
-            }
-            
-            .modal-content p, .modal-content li {
-                font-size: 14px;
-            }
-        }
-
-        /* Small Mobile Phones */
-        @media (max-width: 480px) {
-            h1 {
-                font-size: 1.8em;
-            }
-            
-            .controls-panel {
-                padding: 12px;
-            }
-            
-            .controls-panel h3 {
-                font-size: 1.2em;
-            }
-            
-            .difficulty-btn {
-                padding: 10px 6px;
-                font-size: 12px;
-            }
-            
-            .shape-btn {
-                min-height: 50px;
-            }
-            
-            .action-btn {
-                padding: 10px 12px;
-                font-size: 13px;
-            }
-            
-            .status-box {
-                padding: 10px;
-                font-size: 12px;
-            }
-            
-            #timer-box, #height-display, #target-height-display {
-                font-size: 1em;
-            }
-            
-            .progress-track {
-                width: 25px;
-            }
-            
-            #knight-progress-icon {
-                width: 35px;
-                height: 35px;
-            }
-            
-            .modal-content {
-                padding: 15px 20px;
-            }
-        }
-
-        /* Tablet Portrait */
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .controls-panel {
-                width: 220px;
-            }
-            
-            .difficulty-btn {
-                padding: 12px;
-                font-size: 15px;
-            }
-            
-            .shape-btn {
-                min-height: 70px;
-            }
-            
-            .action-btn {
-                padding: 14px 22px;
-                font-size: 15px;
-            }
-            
-            .status-box {
-                padding: 16px;
-                font-size: 15px;
-            }
-        }
-
-        /* Landscape Mobile */
-        @media (max-width: 768px) and (orientation: landscape) {
-            .main-content {
-                flex-direction: row;
-            }
-            
-            .game-area-wrapper {
-                order: 1;
-            }
-            
-            .controls-panel {
-                order: 2;
-                width: 180px;
-            }
-            
-            .difficulty-selector {
-                grid-template-columns: 1fr;
-            }
-            
-            .shape-buttons {
-                grid-template-columns: 1fr 1fr;
-            }
-            
-            .game-actions {
-                grid-template-columns: 1fr;
-            }
-            
-            .game-canvas-container {
-                aspect-ratio: 3 / 4;
-            }
-        }
-
-        /* Touch-friendly improvements */
-        @media (hover: none) and (pointer: coarse) {
-            .difficulty-btn, .shape-btn, .action-btn {
-                min-height: 44px;
-            }
-            
-            .shape-btn:active {
-                transform: scale(0.95);
-            }
-            
-            .difficulty-btn:active, .action-btn:active {
-                transform: scale(0.98);
-            }
+        @media (max-width: 600px) {
+            .main-content { flex-direction: column-reverse; }
+            .controls-panel { width: 100%; box-sizing: border-box; }
+            .difficulty-selector { grid-template-columns: 1fr 1fr 1fr; }
+            .shape-buttons { grid-template-columns: repeat(4, 1fr); }
+            .game-actions { grid-template-columns: 1fr 1fr; }
+            .progress-container { display: none; }
         }
     </style>
 </head>
@@ -768,4 +546,316 @@
                         lineWidth: 2
                     }
                 };
+                let shapeBody;
+                switch (type) {
+                    case 'square': shapeBody = Bodies.rectangle(x, y, 50, 50, options); break;
+                    case 'rect': shapeBody = Bodies.rectangle(x, y, 80, 40, options); break;
+                    case 'circle': shapeBody = Bodies.circle(x, y, 25, options); break;
+                    case 'triangle': shapeBody = Bodies.polygon(x, y, 3, 35, options); break;
+                    default: shapeBody = Bodies.rectangle(x, y, 50, 50, options);
+                }
+                shapeBody.shapeType = type;
+                return shapeBody;
+            };
+
+            // --- Game Initialization ---
+            function init() {
+                if (!currentDifficulty) {
+                    document.querySelectorAll('.shape-btn').forEach(b => b.disabled = true);
+                    return;
+                }
+
+                isGameWon = false;
+                isGameOver = false;
+                isTimerRunning = false;
+                if (winTimer) clearTimeout(winTimer);
+                if (gameTimer) clearInterval(gameTimer);
+                winModal.style.display = 'none';
+                timeUpModal.style.display = 'none';
+                blocks = [];
+                statusBox.textContent = 'Build a tower to the princess!';
+                statusBox.style.color = '#2c3e50';
                 
+                const hintBtn = document.getElementById('hint-btn');
+                if(hintBtn) hintBtn.disabled = true;
+
+                document.querySelectorAll('.shape-btn').forEach(b => b.disabled = false);
+
+                const settings = difficultySettings[currentDifficulty];
+                timeLeft = settings.time;
+                timerBox.textContent = `Time: ${timeLeft}s`;
+                timerBox.style.color = '#34495e';
+                
+                const goalHeight = canvasHeight * (1 - settings.goalPercent);
+                princessContainer.style.top = `${goalHeight - 100}px`; 
+                
+                const targetHeightMeters = Math.round((canvasHeight - goalHeight - 25) / 10);
+                targetHeightDisplay.textContent = `Target: ${targetHeightMeters}m`;
+                
+                ropeLine.style.height = `${canvasHeight - goalHeight - 25}px`;
+
+
+                engine = Engine.create();
+                engine.world.gravity.y = 1;
+
+                render = Render.create({
+                    element: container,
+                    engine: engine,
+                    options: { width: canvasWidth, height: canvasHeight, wireframes: false, background: 'transparent' }
+                });
+
+                ground = Bodies.rectangle(canvasWidth / 2, canvasHeight - 25, canvasWidth, 50, { isStatic: true, render: { fillStyle: '#6b8e23' } });
+                const wallThickness = 50;
+                const leftWall = Bodies.rectangle(0 - wallThickness / 2, canvasHeight / 2, wallThickness, canvasHeight, { isStatic: true, render: { visible: false } });
+                const rightWall = Bodies.rectangle(canvasWidth + wallThickness / 2, canvasHeight / 2, wallThickness, canvasHeight, { isStatic: true, render: { visible: false } });
+
+                const mouse = Mouse.create(render.canvas);
+                mouseConstraint = MouseConstraint.create(engine, {
+                    mouse: mouse,
+                    constraint: { stiffness: 0.9, render: { visible: false } }
+                });
+                
+                Events.on(mouseConstraint, 'startdrag', (event) => {
+                    if (blocks.includes(event.body) || isGameOver) {
+                        mouseConstraint.body = null;
+                    }
+                });
+                
+                World.add(engine.world, [ground, leftWall, rightWall, mouseConstraint]);
+                runner = Runner.create();
+                Runner.run(runner, engine);
+                Render.run(render);
+                
+                Events.on(engine, 'collisionStart', handleCollision);
+                Events.on(engine, 'afterUpdate', () => checkWinCondition(goalHeight));
+            }
+
+            // --- Game Logic ---
+            function startGameTimer() {
+                if (isTimerRunning) return;
+                isTimerRunning = true;
+                gameTimer = setInterval(() => {
+                    timeLeft--;
+                    timerBox.textContent = `Time: ${timeLeft}s`;
+                    if (timeLeft <= 10) {
+                        timerBox.style.color = '#e74c3c';
+                    }
+                    if (timeLeft <= 0) {
+                        gameOver("Alas, Time's Up!");
+                    }
+                }, 1000);
+            }
+
+            function handleCollision(event) {
+                if (isGameOver) return;
+                event.pairs.forEach(pair => {
+                    const { bodyA, bodyB } = pair;
+                    const isBodyABlock = blocks.some(block => block.id === bodyA.id);
+                    const isBodyBBlock = blocks.some(block => block.id === bodyB.id);
+
+                    if (isBodyABlock && isBodyBBlock) {
+                        if (pair.collision.depth > 1) { 
+                            playSound('collide');
+                        }
+                    }
+                });
+            }
+
+            function checkWinCondition(goalHeight) {
+                if (isGameWon || isGameOver) return;
+                
+                if (blocks.length > 0) {
+                    const highestBlock = blocks.reduce((prev, current) => {
+                        return (prev.bounds.min.y < current.bounds.min.y) ? prev : current;
+                    });
+                    const highestPoint = highestBlock.bounds.min.y;
+                    
+                    const groundY = ground.position.y;
+                    const towerHeightPixels = groundY - highestPoint;
+                    const goalDistancePixels = groundY - goalHeight;
+
+                    heightDisplay.textContent = `Height: ${Math.round(towerHeightPixels / 10)}m`;
+                    let progressPercent = (towerHeightPixels / goalDistancePixels) * 100;
+                    progressPercent = Math.min(Math.max(progressPercent, 0), 100);
+                    
+                    const ropeHeight = ropeLine.offsetHeight;
+                    const knightBottomOffset = 25;
+                    knightProgressIcon.style.bottom = `${knightBottomOffset + (progressPercent / 100) * ropeHeight}px`;
+                    
+                    if (currentShape) {
+                        if (winTimer) {
+                            clearInterval(winTimer);
+                            winTimer = null;
+                            statusBox.textContent = 'Continue building, brave knight!';
+                            statusBox.style.color = '#2c3e50';
+                        }
+                        return;
+                    }
+
+                    let isSupported = false;
+                    if (highestBlock) {
+                        const otherBlocks = blocks.filter(b => b.id !== highestBlock.id);
+                        const supportCandidates = [ground, ...otherBlocks];
+                        const collisions = Query.collides(highestBlock, supportCandidates);
+                        if (collisions.length > 0) {
+                            isSupported = true;
+                        }
+                    }
+
+                    if (highestPoint < goalHeight && isSupported) {
+                        if (!winTimer) {
+                            let countdown = winDuration / 1000;
+                            statusBox.textContent = `Hold steady for ${countdown}...`;
+                            statusBox.style.color = '#27ae60';
+                            winTimer = setInterval(() => {
+                                countdown--;
+                                if (countdown > 0) {
+                                    statusBox.textContent = `Hold steady for ${countdown}...`;
+                                } else {
+                                    winGame();
+                                }
+                            }, 1000);
+                        }
+                    } else if (winTimer) {
+                        clearInterval(winTimer);
+                        winTimer = null;
+                        statusBox.textContent = 'Continue building, brave knight!';
+                        statusBox.style.color = '#2c3e50';
+                    }
+                } else {
+                    heightDisplay.textContent = 'Height: 0m';
+                    knightProgressIcon.style.bottom = '25px';
+                }
+            }
+            
+            function winGame() {
+                if (isGameOver) return;
+                isGameWon = true;
+                isGameOver = true;
+                playSound('win');
+                clearInterval(winTimer);
+                clearInterval(gameTimer);
+                winTimer = null;
+                statusBox.textContent = 'Huzzah! You saved the princess!';
+                
+                knightProgressIcon.classList.add('victory');
+
+                winMessage.textContent = "A Royal Decree on your performance...";
+                scoreDisplay.textContent = '🤔';
+                critiqueText.textContent = '';
+                winModal.style.display = 'flex';
+
+                blocks.forEach(block => Body.setStatic(block, true));
+                getAIScore();
+            }
+
+            function gameOver(message) {
+                if (isGameOver) return;
+                isGameOver = true;
+                playSound('lose');
+                clearInterval(gameTimer);
+                clearInterval(winTimer);
+                winTimer = null;
+                statusBox.textContent = message;
+                timeUpModal.style.display = 'flex';
+                document.querySelectorAll('.shape-btn, #hint-btn').forEach(b => b.disabled = true);
+            }
+
+            // --- Gemini API Integrations ---
+            async function getAIScore() {
+                // ...
+            }
+            
+            async function getBuildingHint() {
+                // ...
+            }
+
+            // --- Event Listeners & Game Flow ---
+            document.querySelectorAll('.difficulty-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    playSound('click');
+                    currentDifficulty = e.target.id.replace('-btn', '');
+                    document.querySelectorAll('.difficulty-btn').forEach(b => b.classList.remove('selected'));
+                    e.target.classList.add('selected');
+                    resetGame();
+                });
+            });
+            
+            function handleShapeSelection(type) {
+                if (isGameOver || currentShape) return;
+                const mousePosition = mouseConstraint.mouse.position;
+                currentShape = createShape(mousePosition.x, mousePosition.y, type);
+                currentShape.collisionFilter.group = -1;
+                World.add(engine.world, currentShape);
+                mouseConstraint.body = currentShape;
+            }
+            
+            document.querySelectorAll('.shape-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    playSound('click');
+                    handleShapeSelection(btn.id.replace('-btn', ''));
+                });
+            });
+
+            document.getElementById('reset-btn').addEventListener('click', resetGame);
+            
+            instructionsBtn.addEventListener('click', () => {
+                playSound('click');
+                instructionsModal.style.display = 'flex';
+            });
+            
+            container.addEventListener('click', () => {
+                if (currentShape) {
+                    playSound('place');
+                    if (!isTimerRunning) {
+                        startGameTimer();
+                    }
+                    currentShape.collisionFilter.group = 0;
+                    blocks.push(currentShape);
+                    if (blocks.length >= 3 && !isGameOver) {
+                        const hintBtn = document.getElementById('hint-btn');
+                        if(hintBtn) hintBtn.disabled = false;
+                    }
+                    currentShape = null;
+                    mouseConstraint.body = null;
+                }
+            });
+
+            document.querySelectorAll('.modal-close-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    playSound('click');
+                    const modalId = btn.getAttribute('data-modal-id');
+                    document.getElementById(modalId).style.display = 'none';
+                    if (modalId === 'win-modal' || modalId === 'time-up-modal') {
+                        resetGame();
+                    }
+                });
+            });
+            
+            // --- Reset & Resize ---
+            function resetGame() {
+                if (runner) Runner.stop(runner);
+                if (render) Render.stop(render);
+                if (render && render.canvas) render.canvas.remove();
+                if (engine) World.clear(engine.world);
+                if (engine) Engine.clear(engine);
+
+                knightProgressIcon.classList.remove('victory');
+                canvasWidth = container.clientWidth;
+                canvasHeight = container.clientHeight;
+                
+                init();
+            }
+
+            window.addEventListener('resize', () => {
+                clearTimeout(window.resizedFinished);
+                window.resizedFinished = setTimeout(resetGame, 250);
+            });
+
+            // --- Initial Load ---
+            document.body.addEventListener('click', startAudio, { once: true });
+            init();
+        });
+    </script>
+</body>
+</html>
