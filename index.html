@@ -238,13 +238,19 @@
             box-shadow: 0 6px 12px rgba(231, 76, 60, 0.5);
         }
         
-        #instructions-btn {
+        #hint-btn, #instructions-btn {
             background: linear-gradient(45deg, #2980b9, #3498db);
             box-shadow: 0 4px 10px rgba(52, 152, 219, 0.4);
         }
-        #instructions-btn:hover {
+        #hint-btn:hover:not(:disabled), #instructions-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 6px 12px rgba(52, 152, 219, 0.5);
+        }
+        #hint-btn:disabled {
+            background-color: #bdc3c7;
+            background-image: none;
+            cursor: not-allowed;
+            opacity: 0.6;
         }
         
         .status-box {
@@ -399,6 +405,7 @@
                 <div id="timer-box" class="status-box">Time: --</div>
                 <div class="game-actions">
                      <button id="instructions-btn" class="action-btn">📜 Instructions</button>
+                     <button id="hint-btn" class="action-btn" disabled>📜 Get Hint</button>
                      <button id="reset-btn" class="action-btn">Reset</button>
                 </div>
                 <div id="status-box" class="status-box">Select a difficulty!</div>
@@ -459,6 +466,7 @@
             const targetHeightDisplay = document.getElementById('target-height-display');
             const knightProgressIcon = document.getElementById('knight-progress-icon');
             const ropeLine = document.getElementById('rope-line');
+            const hintBtn = document.getElementById('hint-btn');
             const instructionsBtn = document.getElementById('instructions-btn');
             const winModal = document.getElementById('win-modal');
             const hintModal = document.getElementById('hint-modal');
@@ -472,33 +480,21 @@
 
             // --- Audio Context ---
             let audioStarted = false;
-            let synth;
+            let synth, musicLoop;
 
             function startAudio() {
                 if (audioStarted) return;
                 Tone.start();
                 audioStarted = true;
-                synth = new Tone.Synth().toDestination();
             }
             
             function playSound(type) {
                 if (!audioStarted) return;
-                
+                if (!synth) synth = new Tone.Synth().toDestination();
+
                 switch (type) {
                     case 'place':
                         synth.triggerAttackRelease("C2", "8n");
-                        break;
-                    case 'collide':
-                        new Tone.MembraneSynth({
-                            pitchDecay: 0.01,
-                            octaves: 2,
-                            envelope: {
-                                attack: 0.001,
-                                decay: 0.2,
-                                sustain: 0.01,
-                                release: 0.1,
-                            },
-                        }).toDestination().triggerAttackRelease("C1", "8n");
                         break;
                     case 'win':
                         new Tone.Synth().toDestination().triggerAttackRelease("C4", "8n", Tone.now());
@@ -513,7 +509,6 @@
                         break;
                 }
             }
-
 
             // --- Game Configuration ---
             const difficultySettings = {
@@ -575,10 +570,7 @@
                 blocks = [];
                 statusBox.textContent = 'Build a tower to the princess!';
                 statusBox.style.color = '#2c3e50';
-                
-                const hintBtn = document.getElementById('hint-btn');
-                if(hintBtn) hintBtn.disabled = true;
-
+                hintBtn.disabled = true;
                 document.querySelectorAll('.shape-btn').forEach(b => b.disabled = false);
 
                 const settings = difficultySettings[currentDifficulty];
@@ -626,7 +618,6 @@
                 Runner.run(runner, engine);
                 Render.run(render);
                 
-                Events.on(engine, 'collisionStart', handleCollision);
                 Events.on(engine, 'afterUpdate', () => checkWinCondition(goalHeight));
             }
 
@@ -644,21 +635,6 @@
                         gameOver("Alas, Time's Up!");
                     }
                 }, 1000);
-            }
-
-            function handleCollision(event) {
-                if (isGameOver) return;
-                event.pairs.forEach(pair => {
-                    const { bodyA, bodyB } = pair;
-                    const isBodyABlock = blocks.some(block => block.id === bodyA.id);
-                    const isBodyBBlock = blocks.some(block => block.id === bodyB.id);
-
-                    if (isBodyABlock && isBodyBBlock) {
-                        if (pair.collision.depth > 1) { 
-                            playSound('collide');
-                        }
-                    }
-                });
             }
 
             function checkWinCondition(goalHeight) {
@@ -763,11 +739,101 @@
 
             // --- Gemini API Integrations ---
             async function getAIScore() {
-                // ...
+                const settings = difficultySettings[currentDifficulty];
+                const timeTaken = settings.time - timeLeft;
+                const blockCount = blocks.length;
+                const sortedBlocks = [...blocks].sort((a, b) => b.position.y - a.position.y);
+                
+                let designDescription = "The knight's tower design from bottom to top is:\n";
+                sortedBlocks.forEach((block, index) => {
+                    designDescription += `${index + 1}. A ${block.shapeType} stone.\n`;
+                });
+
+                const prompt = `
+                    You are a Royal Scrivener for a king, writing a decree about a knight's tower-building performance to rescue a princess.
+                    Your task is to provide a final score and a fun, encouraging critique in a medieval tone.
+
+                    Here are the knight's results:
+                    - Difficulty: ${settings.name}
+                    - Time Taken: ${timeTaken} seconds (out of ${settings.time}).
+                    - Stones Used: ${blockCount}.
+                    - Tower Design: ${designDescription}
+
+                    Scoring Rules:
+                    - Base Score: 1000 points.
+                    - Time Bonus: More points for speed.
+                    - Efficiency Bonus: More points for using fewer stones.
+                    - Stability Bonus: Award points for a wide base and stable design.
+                    - Difficulty Multiplier: (e.g., Easy x1, Moderate x1.5, Hard x2).
+
+                    Your response MUST be a JSON object with "score" (a number) and "critique" (a short, fun, encouraging string of 1-2 sentences in a royal/medieval tone).
+                `;
+
+                try {
+                    const chatHistory = [{ role: "user", parts: [{ text: prompt }] }];
+                    const payload = { contents: chatHistory };
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) throw new Error(`API error: ${response.status}`);
+                    
+                    const result = await response.json();
+                    const rawText = result.candidates[0].content.parts[0].text;
+                    const jsonText = rawText.replace(/```json/g, '').replace(/```/g, '').trim();
+                    const scoreData = JSON.parse(jsonText);
+
+                    winMessage.textContent = 'A Royal Decree on your performance:';
+                    scoreDisplay.textContent = scoreData.score;
+                    critiqueText.textContent = `"${scoreData.critique}"`;
+
+                } catch (error) {
+                    console.error("AI Scoring Error:", error);
+                    winMessage.textContent = 'A Royal Decree on your performance:';
+                    scoreDisplay.textContent = '1000';
+                    critiqueText.textContent = '"A valiant effort, good knight! Your tower stands true."';
+                }
             }
             
             async function getBuildingHint() {
-                // ...
+                if (blocks.length < 3 || isGameOver) return;
+                const originalStatus = statusBox.textContent;
+                hintBtn.disabled = true;
+                statusBox.textContent = '📜 Consulting the engineer...';
+                const sortedBlocks = [...blocks].sort((a, b) => b.position.y - a.position.y);
+                let promptContent = "You are a wise Royal Engineer advising a knight on how to build a tower to rescue a princess. The knight's tower (from bottom to top) is:\n";
+                sortedBlocks.forEach((block, index) => {
+                    promptContent += `${index + 1}. A ${block.shapeType} stone.\n`;
+                });
+                promptContent += "\nGive the knight a simple, encouraging tip (2-3 sentences) on how to make the tower more stable. Speak in a wise, medieval tone.";
+                try {
+                    const chatHistory = [{ role: "user", parts: [{ text: promptContent }] }];
+                    const payload = { contents: chatHistory };
+                    const apiKey = "";
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (!response.ok) throw new Error(`API error: ${response.status}`);
+                    const result = await response.json();
+                    const hint = result.candidates[0].content.parts[0].text;
+                    hintTextElement.textContent = hint;
+                    hintModal.style.display = 'flex';
+                } catch (error) {
+                    console.error("Gemini API error:", error);
+                    hintTextElement.textContent = "Ahem... ahem... a wide foundation is the key to a tower that touches the heavens, good knight!";
+                    hintModal.style.display = 'flex';
+                } finally {
+                    statusBox.textContent = originalStatus;
+                    if (!isGameOver) hintBtn.disabled = false;
+                }
             }
 
             // --- Event Listeners & Game Flow ---
@@ -798,6 +864,7 @@
             });
 
             document.getElementById('reset-btn').addEventListener('click', resetGame);
+            document.getElementById('hint-btn').addEventListener('click', getBuildingHint);
             
             instructionsBtn.addEventListener('click', () => {
                 playSound('click');
@@ -813,8 +880,7 @@
                     currentShape.collisionFilter.group = 0;
                     blocks.push(currentShape);
                     if (blocks.length >= 3 && !isGameOver) {
-                        const hintBtn = document.getElementById('hint-btn');
-                        if(hintBtn) hintBtn.disabled = false;
+                        hintBtn.disabled = false;
                     }
                     currentShape = null;
                     mouseConstraint.body = null;
